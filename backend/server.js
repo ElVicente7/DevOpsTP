@@ -8,11 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// GET - Récupérer toutes les personnes
-app.get("/personnes", async (req, res) => {
+// GET - Récupérer tous les utilisateurs
+app.get("/users", async (req, res) => {
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM personnes ORDER BY id"
+            "SELECT * FROM users ORDER BY id"
         );
 
         res.json(rows);
@@ -22,103 +22,110 @@ app.get("/personnes", async (req, res) => {
     }
 });
 
-// POST - Créer une personne
-app.post("/personnes", async (req, res) => {
+// POST - Créer un utilisateur
+app.post("/users", async (req, res) => {
     try {
-        const { nom, prenom, age, email, ville } = req.body;
+        const { nom, prenom, email } = req.body;
 
-        if (!nom || !prenom) {
+        if (!nom || !prenom || !email) {
             return res.status(400).json({
-                error: "Nom et prénom obligatoires"
+                error: "Nom, prénom et email obligatoires"
             });
         }
 
         const [result] = await pool.query(
-            `INSERT INTO personnes
-             (nom, prenom, age, email, ville)
-             VALUES (?, ?, ?, ?, ?)`,
-            [
-                nom,
-                prenom,
-                age ?? null,
-                email ?? null,
-                ville ?? null
-            ]
+            `INSERT INTO users (nom, prenom, email)
+             VALUES (?, ?, ?)`,
+            [nom, prenom, email]
         );
 
         res.status(201).json({
-            message: "Personne créée",
+            message: "Utilisateur créé",
             id: result.insertId
         });
+
     } catch (error) {
         console.error(error);
+
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                error: "Cet email existe déjà"
+            });
+        }
+
         res.status(500).json({ error: "Erreur serveur" });
     }
 });
 
-// PUT - Modifier une personne
-app.put("/personnes/:id", async (req, res) => {
+// PUT - Modifier un utilisateur
+app.put("/users/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { nom, prenom, age, email, ville } = req.body;
+        const { nom, prenom, email } = req.body;
 
-        if (!nom || !prenom) {
+        if (!nom || !prenom || !email) {
             return res.status(400).json({
-                error: "Nom et prénom obligatoires"
+                error: "Nom, prénom et email obligatoires"
             });
         }
 
         const [result] = await pool.query(
-            `UPDATE personnes
-             SET nom = ?, prenom = ?, age = ?,
-                 email = ?, ville = ?
+            `UPDATE users
+             SET nom = ?, prenom = ?, email = ?
              WHERE id = ?`,
-            [
-                nom,
-                prenom,
-                age ?? null,
-                email ?? null,
-                ville ?? null,
-                id
-            ]
+            [nom, prenom, email, id]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                error: "Personne introuvable"
+                error: "Utilisateur introuvable"
             });
         }
 
-        res.json({ message: "Personne modifiée" });
+        res.json({
+            message: "Utilisateur modifié"
+        });
+
     } catch (error) {
         console.error(error);
+
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                error: "Cet email existe déjà"
+            });
+        }
+
         res.status(500).json({ error: "Erreur serveur" });
     }
 });
 
-// DELETE - Supprimer une personne
-app.delete("/personnes/:id", async (req, res) => {
+// DELETE - Supprimer un utilisateur
+app.delete("/users/:id", async (req, res) => {
     try {
         const { id } = req.params;
 
         const [result] = await pool.query(
-            "DELETE FROM personnes WHERE id = ?",
+            "DELETE FROM users WHERE id = ?",
             [id]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                error: "Personne introuvable"
+                error: "Utilisateur introuvable"
             });
         }
 
-        res.json({ message: "Personne supprimée" });
+        res.json({
+            message: "Utilisateur supprimé"
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erreur serveur" });
     }
 });
 
+// Démarrage du serveur
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
