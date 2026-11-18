@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Tests OK\" && exit 0"
-}
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
