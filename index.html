@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Personnes - TP DevOps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6">
+        
+        <!-- En-tête + Compteur (Membre 2) -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Personnes</h1>
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2">
+                <span class="font-medium">👥 Total :</span>
+                <span id="totalCount" class="bg-blue-600 text-white font-bold px-3 py-0.5 rounded-full text-sm">0</span>
+            </div>
+        </div>
+
+        <!-- Formulaire : Créer / Modifier une personne (Membre 1 + Champ Email Membre 3) -->
+        <form id="personForm" class="mb-8 bg-gray-50 p-4 rounded-lg border grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+            <input type="hidden" id="personId">
+            
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nom</label>
+                <input type="text" id="nom" required placeholder="Ex: Alice Dupont" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email</label>
+                <input type="email" id="email" required placeholder="alice@mail.com" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Âge</label>
+                <input type="number" id="age" required min="1" max="120" placeholder="22" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Ville</label>
+                <input type="text" id="ville" required placeholder="Pau" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">Créer</button>
+                <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-400 text-white px-3 py-2 rounded text-sm hover:bg-gray-500 transition">✕</button>
+            </div>
+        </form>
+
+        <!-- Barre de recherche, Filtres et Tri (Membre 2 & Membre 3) -->
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-3 rounded border">
+            <!-- Rechercher par nom (Membre 2) -->
+            <input type="text" id="searchNom" placeholder="🔍 Rechercher par nom..." onkeyup="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
+            
+            <!-- Filtrer par ville (Membre 3) -->
+            <input type="text" id="filterVille" placeholder="🏙️ Filtrer par ville..." onkeyup="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
+            
+            <!-- Filtrer par âge minimum (Membre 3) -->
+            <input type="number" id="filterAge" placeholder="🎂 Âge minimum..." oninput="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
+            
+            <!-- Trier par ordre alphabétique (Membre 2) -->
+            <button type="button" onclick="trierAlphabetique()" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-700 transition">
+                🔤 Trier (A → Z)
+            </button>
+        </div>
+
+        <!-- Tableau des Personnes -->
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-200 text-sm">
+                <thead>
+                    <tr class="bg-gray-100 text-left text-gray-700">
+                        <th class="border border-gray-200 p-3">ID</th>
+                        <th class="border border-gray-200 p-3">Nom</th>
+                        <th class="border border-gray-200 p-3">Email</th>
+                        <th class="border border-gray-200 p-3">Âge</th>
+                        <th class="border border-gray-200 p-3">Ville</th>
+                        <th class="border border-gray-200 p-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="personTableBody">
+                    <!-- Lignes générées par JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Données initiales pour tester l'affichage immédiatement
+        let personnes = [
+            { id: 1, nom: "Alice Dupont", email: "alice@example.com", age: 21, ville: "Pau" },
+            
+        ];
+
+        let ordreCroissant = true;
+
+        // Affichage initial au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable(personnes);
+        });
+
+        // Rendu du tableau + mise à jour du compteur (Membre 2)
+        function renderTable(liste) {
+            const tbody = document.getElementById('personTableBody');
+            document.getElementById('totalCount').innerText = liste.length;
+            tbody.innerHTML = '';
+
+            if (liste.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Aucune personne trouvée.</td></tr>`;
+                return;
+            }
+
+            liste.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="border border-gray-200 p-3 font-mono text-gray-500">#${p.id}</td>
+                        <td class="border border-gray-200 p-3 font-medium">${p.nom}</td>
+                        <td class="border border-gray-200 p-3 text-gray-600">${p.email}</td>
+                        <td class="border border-gray-200 p-3">${p.age} ans</td>
+                        <td class="border border-gray-200 p-3">${p.ville}</td>
+                        <td class="border border-gray-200 p-3 text-center space-x-2">
+                            <button onclick="editPerson(${p.id})" class="bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition">Modifier</button>
+                            <button onclick="deletePerson(${p.id})" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Supprimer</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // MEMBRE 1 : Créer ou Modifier une personne
+        document.getElementById('personForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('personId').value;
+            const nom = document.getElementById('nom').value;
+            const email = document.getElementById('email').value;
+            const age = Number(document.getElementById('age').value);
+            const ville = document.getElementById('ville').value;
+
+            if (id) {
+                // Modifier
+                personnes = personnes.map(p => p.id == id ? { id: Number(id), nom, email, age, ville } : p);
+            } else {
+                // Créer
+                const newId = personnes.length > 0 ? Math.max(...personnes.map(p => p.id)) + 1 : 1;
+                personnes.push({ id: newId, nom, email, age, ville });
+            }
+
+            resetForm();
+            appliquerFiltres();
+        });
+
+        // Pré-remplir le formulaire pour la modification (Membre 1)
+        function editPerson(id) {
+            const p = personnes.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('personId').value = p.id;
+            document.getElementById('nom').value = p.nom;
+            document.getElementById('email').value = p.email;
+            document.getElementById('age').value = p.age;
+            document.getElementById('ville').value = p.ville;
+
+            document.getElementById('submitBtn').innerText = 'Mettre à jour';
+            document.getElementById('submitBtn').className = 'w-full bg-amber-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-amber-600 transition';
+            document.getElementById('cancelBtn').classList.remove('hidden');
+        }
+
+        // MEMBRE 1 : Supprimer une personne
+        function deletePerson(id) {
+            if (confirm("Voulez-vous vraiment supprimer cette personne ?")) {
+                personnes = personnes.filter(p => p.id !== id);
+                appliquerFiltres();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('personForm').reset();
+            document.getElementById('personId').value = '';
+            document.getElementById('submitBtn').innerText = 'Créer';
+            document.getElementById('submitBtn').className = 'w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition';
+            document.getElementById('cancelBtn').classList.add('hidden');
+        }
+
+        // MEMBRE 2 : Trier par ordre alphabétique
+        function trierAlphabetique() {
+            personnes.sort((a, b) => {
+                return ordreCroissant 
+                    ? a.nom.localeCompare(b.nom) 
+                    : b.nom.localeCompare(a.nom);
+            });
+            ordreCroissant = !ordreCroissant;
+            appliquerFiltres();
+        }
+
+        // MEMBRE 2 & 3 : Recherche par nom + Filtre par ville + Filtre par âge
+        function appliquerFiltres() {
+            const searchNom = document.getElementById('searchNom').value.toLowerCase();
+            const filterVille = document.getElementById('filterVille').value.toLowerCase();
+            const filterAge = Number(document.getElementById('filterAge').value);
+
+            const resultat = personnes.filter(p => {
+                const matchNom = p.nom.toLowerCase().includes(searchNom);
+                const matchVille = p.ville.toLowerCase().includes(filterVille);
+                const matchAge = !filterAge || p.age >= filterAge;
+                return matchNom && matchVille && matchAge;
+            });
+
+            renderTable(resultat);
+        }
+    </script>
+</body>
+</html>
