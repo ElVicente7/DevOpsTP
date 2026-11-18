@@ -1,212 +1,263 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Personnes - TP DevOps</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des utilisateurs - TP DevOps</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6">
-        
-        <!-- En-tête + Compteur (Membre 2) -->
-        <div class="flex justify-between items-center mb-6 border-b pb-4">
-            <h1 class="text-2xl font-bold text-gray-800">Gestion des Personnes</h1>
-            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2">
-                <span class="font-medium">👥 Total :</span>
-                <span id="totalCount" class="bg-blue-600 text-white font-bold px-3 py-0.5 rounded-full text-sm">0</span>
-            </div>
-        </div>
 
-        <!-- Formulaire : Créer / Modifier une personne (Membre 1 + Champ Email Membre 3) -->
-        <form id="personForm" class="mb-8 bg-gray-50 p-4 rounded-lg border grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-            <input type="hidden" id="personId">
-            
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nom</label>
-                <input type="text" id="nom" required placeholder="Ex: Alice Dupont" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email</label>
-                <input type="email" id="email" required placeholder="alice@mail.com" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+  <main class="max-w-5xl mx-auto bg-white shadow-md rounded-xl p-5 md:p-7">
+    <header class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b pb-5">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">Gestion des utilisateurs</h1>
+        <p class="text-sm text-gray-500 mt-1">Application CRUD · TP DevOps</p>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2">
+        <span class="font-medium">Total :</span>
+        <span id="totalCount" class="bg-blue-600 text-white font-bold px-3 py-0.5 rounded-full text-sm">0</span>
+      </div>
+    </header>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Âge</label>
-                <input type="number" id="age" required min="1" max="120" placeholder="22" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+    <div id="message" role="status" aria-live="polite" class="hidden mb-5 rounded-lg px-4 py-3 text-sm"></div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Ville</label>
-                <input type="text" id="ville" required placeholder="Pau" class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+    <form id="personForm" class="mb-7 bg-gray-50 p-4 rounded-lg border grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+      <input type="hidden" id="personId">
+      <div>
+        <label for="nom" class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nom</label>
+        <input type="text" id="nom" required maxlength="100" placeholder="Dupont"
+          class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label for="prenom" class="block text-xs font-semibold text-gray-600 uppercase mb-1">Prénom</label>
+        <input type="text" id="prenom" required maxlength="100" placeholder="Alice"
+          class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label for="email" class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email</label>
+        <input type="email" id="email" required maxlength="150" placeholder="alice@example.com"
+          class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" id="submitBtn"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Créer</button>
+        <button type="button" id="cancelBtn"
+          class="hidden bg-gray-400 text-white px-3 py-2 rounded text-sm hover:bg-gray-500">Annuler</button>
+      </div>
+    </form>
 
-            <div class="flex gap-2">
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">Créer</button>
-                <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-400 text-white px-3 py-2 rounded text-sm hover:bg-gray-500 transition">✕</button>
-            </div>
-        </form>
-
-        <!-- Barre de recherche, Filtres et Tri (Membre 2 & Membre 3) -->
-        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-3 rounded border">
-            <!-- Rechercher par nom (Membre 2) -->
-            <input type="text" id="searchNom" placeholder="🔍 Rechercher par nom..." onkeyup="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
-            
-            <!-- Filtrer par ville (Membre 3) -->
-            <input type="text" id="filterVille" placeholder="🏙️ Filtrer par ville..." onkeyup="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
-            
-            <!-- Filtrer par âge minimum (Membre 3) -->
-            <input type="number" id="filterAge" placeholder="🎂 Âge minimum..." oninput="appliquerFiltres()" class="border rounded px-3 py-1.5 text-sm bg-white">
-            
-            <!-- Trier par ordre alphabétique (Membre 2) -->
-            <button type="button" onclick="trierAlphabetique()" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-700 transition">
-                🔤 Trier (A → Z)
-            </button>
-        </div>
-
-        <!-- Tableau des Personnes -->
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse border border-gray-200 text-sm">
-                <thead>
-                    <tr class="bg-gray-100 text-left text-gray-700">
-                        <th class="border border-gray-200 p-3">ID</th>
-                        <th class="border border-gray-200 p-3">Nom</th>
-                        <th class="border border-gray-200 p-3">Email</th>
-                        <th class="border border-gray-200 p-3">Âge</th>
-                        <th class="border border-gray-200 p-3">Ville</th>
-                        <th class="border border-gray-200 p-3 text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="personTableBody">
-                    <!-- Lignes générées par JavaScript -->
-                </tbody>
-            </table>
-        </div>
+    <div class="mb-4 flex flex-col md:flex-row gap-3">
+      <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom ou email..."
+        class="flex-1 border rounded px-3 py-2 text-sm">
+      <button type="button" id="sortBtn"
+        class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700">Trier A → Z</button>
+      <button type="button" id="refreshBtn"
+        class="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300">Actualiser</button>
     </div>
 
-    <script>
-        // Données initiales pour tester l'affichage immédiatement
-        let personnes = [
-            { id: 1, nom: "Alice Dupont", email: "alice@example.com", age: 21, ville: "Pau" },
-            
-        ];
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse border border-gray-200 text-sm">
+        <thead>
+          <tr class="bg-gray-100 text-left text-gray-700">
+            <th class="border border-gray-200 p-3">ID</th>
+            <th class="border border-gray-200 p-3">Nom</th>
+            <th class="border border-gray-200 p-3">Prénom</th>
+            <th class="border border-gray-200 p-3">Email</th>
+            <th class="border border-gray-200 p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="personTableBody">
+          <tr>
+            <td colspan="5" class="text-center p-5 text-gray-500">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-        let ordreCroissant = true;
+  <script>
+    // Si le frontend et l'API sont sur deux ports différents, adapter cette URL.
+    const API_URL = 'http://localhost:3000/users';
+    let personnes = [];
+    let ordreCroissant = true;
 
-        // Affichage initial au chargement
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTable(personnes);
+    const form = document.getElementById('personForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const tbody = document.getElementById('personTableBody');
+    const message = document.getElementById('message');
+
+    function afficherMessage(texte, erreur = false) {
+      message.textContent = texte;
+      message.className = `mb-5 rounded-lg px-4 py-3 text-sm ${erreur
+        ? 'bg-red-50 text-red-700 border border-red-200'
+        : 'bg-green-50 text-green-700 border border-green-200'}`;
+    }
+
+    function effacerMessage() {
+      message.classList.add('hidden');
+    }
+
+    async function appelerAPI(url, options = {}) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const data = await response.json();
+          detail = data.error || data.message || '';
+        } catch (_) { /* Réponse sans JSON */ }
+        throw new Error(detail || `Erreur HTTP ${response.status}`);
+      }
+      if (response.status === 204) return null;
+      const texte = await response.text();
+      return texte ? JSON.parse(texte) : null;
+    }
+
+    async function chargerPersonnes() {
+      try {
+        const resultat = await appelerAPI(API_URL);
+        if (!Array.isArray(resultat)) throw new Error('Format de réponse inattendu : tableau attendu');
+        personnes = resultat;
+        effacerMessage();
+        appliquerFiltres();
+      } catch (erreur) {
+        personnes = [];
+        appliquerFiltres();
+        afficherMessage(`Impossible de charger les utilisateurs : ${erreur.message}`, true);
+      }
+    }
+
+    function cellule(texte, classes = '') {
+      const td = document.createElement('td');
+      td.className = `border border-gray-200 p-3 ${classes}`;
+      td.textContent = texte ?? '';
+      return td;
+    }
+
+    function renderTable(liste) {
+      document.getElementById('totalCount').textContent = personnes.length;
+      tbody.replaceChildren();
+
+      if (liste.length === 0) {
+        const tr = document.createElement('tr');
+        const td = cellule('Aucun utilisateur trouvé.', 'text-center text-gray-500');
+        td.colSpan = 5;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for (const p of liste) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.append(
+          cellule(`#${p.id}`, 'font-mono text-gray-500'),
+          cellule(p.nom, 'font-medium'),
+          cellule(p.prenom),
+          cellule(p.email, 'text-gray-600')
+        );
+
+        const actions = cellule('', 'text-center whitespace-nowrap');
+        const modifier = document.createElement('button');
+        modifier.type = 'button';
+        modifier.textContent = 'Modifier';
+        modifier.className = 'bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 mr-2';
+        modifier.addEventListener('click', () => editPerson(p.id));
+
+        const supprimer = document.createElement('button');
+        supprimer.type = 'button';
+        supprimer.textContent = 'Supprimer';
+        supprimer.className = 'bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700';
+        supprimer.addEventListener('click', () => deletePerson(p.id));
+
+        actions.append(modifier, supprimer);
+        tr.appendChild(actions);
+        tbody.appendChild(tr);
+      }
+    }
+
+    function appliquerFiltres() {
+      const recherche = document.getElementById('searchInput').value.trim().toLocaleLowerCase('fr');
+      const resultat = personnes
+        .filter(p => [p.nom, p.prenom, p.email].some(v => String(v ?? '').toLocaleLowerCase('fr').includes(recherche)))
+        .sort((a, b) => {
+          const comparaison = String(a.nom ?? '').localeCompare(String(b.nom ?? ''), 'fr');
+          return ordreCroissant ? comparaison : -comparaison;
         });
+      renderTable(resultat);
+    }
 
-        // Rendu du tableau + mise à jour du compteur (Membre 2)
-        function renderTable(liste) {
-            const tbody = document.getElementById('personTableBody');
-            document.getElementById('totalCount').innerText = liste.length;
-            tbody.innerHTML = '';
+    function editPerson(id) {
+      const p = personnes.find(personne => String(personne.id) === String(id));
+      if (!p) return;
+      document.getElementById('personId').value = p.id;
+      document.getElementById('nom').value = p.nom;
+      document.getElementById('prenom').value = p.prenom;
+      document.getElementById('email').value = p.email;
+      submitBtn.textContent = 'Mettre à jour';
+      submitBtn.className = 'flex-1 bg-amber-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-amber-600 disabled:opacity-50';
+      cancelBtn.classList.remove('hidden');
+      document.getElementById('nom').focus();
+    }
 
-            if (liste.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">Aucune personne trouvée.</td></tr>`;
-                return;
-            }
+    function resetForm() {
+      form.reset();
+      document.getElementById('personId').value = '';
+      submitBtn.textContent = 'Créer';
+      submitBtn.className = 'flex-1 bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50';
+      cancelBtn.classList.add('hidden');
+    }
 
-            liste.forEach(p => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="border border-gray-200 p-3 font-mono text-gray-500">#${p.id}</td>
-                        <td class="border border-gray-200 p-3 font-medium">${p.nom}</td>
-                        <td class="border border-gray-200 p-3 text-gray-600">${p.email}</td>
-                        <td class="border border-gray-200 p-3">${p.age} ans</td>
-                        <td class="border border-gray-200 p-3">${p.ville}</td>
-                        <td class="border border-gray-200 p-3 text-center space-x-2">
-                            <button onclick="editPerson(${p.id})" class="bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition">Modifier</button>
-                            <button onclick="deletePerson(${p.id})" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Supprimer</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const id = document.getElementById('personId').value;
+      const personne = {
+        nom: document.getElementById('nom').value.trim(),
+        prenom: document.getElementById('prenom').value.trim(),
+        email: document.getElementById('email').value.trim()
+      };
+      if (!personne.nom || !personne.prenom || !personne.email) return;
 
-        // MEMBRE 1 : Créer ou Modifier une personne
-        document.getElementById('personForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('personId').value;
-            const nom = document.getElementById('nom').value;
-            const email = document.getElementById('email').value;
-            const age = Number(document.getElementById('age').value);
-            const ville = document.getElementById('ville').value;
-
-            if (id) {
-                // Modifier
-                personnes = personnes.map(p => p.id == id ? { id: Number(id), nom, email, age, ville } : p);
-            } else {
-                // Créer
-                const newId = personnes.length > 0 ? Math.max(...personnes.map(p => p.id)) + 1 : 1;
-                personnes.push({ id: newId, nom, email, age, ville });
-            }
-
-            resetForm();
-            appliquerFiltres();
+      submitBtn.disabled = true;
+      try {
+        await appelerAPI(id ? `${API_URL}/${encodeURIComponent(id)}` : API_URL, {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(personne)
         });
+        resetForm();
+        await chargerPersonnes();
+        afficherMessage(id ? 'Utilisateur modifié.' : 'Utilisateur créé.');
+      } catch (erreur) {
+        afficherMessage(`Enregistrement impossible : ${erreur.message}`, true);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
 
-        // Pré-remplir le formulaire pour la modification (Membre 1)
-        function editPerson(id) {
-            const p = personnes.find(item => item.id === id);
-            if (!p) return;
+    async function deletePerson(id) {
+      if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
+      try {
+        await appelerAPI(`${API_URL}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        await chargerPersonnes();
+        afficherMessage('Utilisateur supprimé.');
+      } catch (erreur) {
+        afficherMessage(`Suppression impossible : ${erreur.message}`, true);
+      }
+    }
 
-            document.getElementById('personId').value = p.id;
-            document.getElementById('nom').value = p.nom;
-            document.getElementById('email').value = p.email;
-            document.getElementById('age').value = p.age;
-            document.getElementById('ville').value = p.ville;
-
-            document.getElementById('submitBtn').innerText = 'Mettre à jour';
-            document.getElementById('submitBtn').className = 'w-full bg-amber-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-amber-600 transition';
-            document.getElementById('cancelBtn').classList.remove('hidden');
-        }
-
-        // MEMBRE 1 : Supprimer une personne
-        function deletePerson(id) {
-            if (confirm("Voulez-vous vraiment supprimer cette personne ?")) {
-                personnes = personnes.filter(p => p.id !== id);
-                appliquerFiltres();
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('personForm').reset();
-            document.getElementById('personId').value = '';
-            document.getElementById('submitBtn').innerText = 'Créer';
-            document.getElementById('submitBtn').className = 'w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition';
-            document.getElementById('cancelBtn').classList.add('hidden');
-        }
-
-        // MEMBRE 2 : Trier par ordre alphabétique
-        function trierAlphabetique() {
-            personnes.sort((a, b) => {
-                return ordreCroissant 
-                    ? a.nom.localeCompare(b.nom) 
-                    : b.nom.localeCompare(a.nom);
-            });
-            ordreCroissant = !ordreCroissant;
-            appliquerFiltres();
-        }
-
-        // MEMBRE 2 & 3 : Recherche par nom + Filtre par ville + Filtre par âge
-        function appliquerFiltres() {
-            const searchNom = document.getElementById('searchNom').value.toLowerCase();
-            const filterVille = document.getElementById('filterVille').value.toLowerCase();
-            const filterAge = Number(document.getElementById('filterAge').value);
-
-            const resultat = personnes.filter(p => {
-                const matchNom = p.nom.toLowerCase().includes(searchNom);
-                const matchVille = p.ville.toLowerCase().includes(filterVille);
-                const matchAge = !filterAge || p.age >= filterAge;
-                return matchNom && matchVille && matchAge;
-            });
-
-            renderTable(resultat);
-        }
-    </script>
+    cancelBtn.addEventListener('click', resetForm);
+    document.getElementById('searchInput').addEventListener('input', appliquerFiltres);
+    document.getElementById('sortBtn').addEventListener('click', event => {
+      ordreCroissant = !ordreCroissant;
+      event.currentTarget.textContent = ordreCroissant ? 'Trier A → Z' : 'Trier Z → A';
+      appliquerFiltres();
+    });
+    document.getElementById('refreshBtn').addEventListener('click', chargerPersonnes);
+    document.addEventListener('DOMContentLoaded', chargerPersonnes);
+  </script>
 </body>
+
 </html>
